@@ -1,0 +1,32 @@
+{
+  "name": "veyra-analysis-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LiveKit agent worker that silently transcribes each meeting participant and, once the meeting ends, scores them on 5 parameters via Groq — written to the same database the main Veyra app reads on the host's meeting-ended screen.",
+  "scripts": {
+    "dev": "prisma generate && tsx watch src/agent.ts dev",
+    "build": "prisma generate && tsc -p tsconfig.json && node -e \"require('fs').cpSync('src/generated', 'dist/generated', { recursive: true })\"",
+    "start": "node dist/agent.js start",
+    "prisma:generate": "prisma generate"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@livekit/agents": "^1.9.0",
+    "@livekit/agents-plugin-deepgram": "^1.9.0",
+    "@livekit/rtc-node": "^0.13.34",
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.0",
+    "dotenv": "^17.4.2",
+    "prisma": "7.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

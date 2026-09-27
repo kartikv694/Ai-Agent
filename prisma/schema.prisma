@@ -1,0 +1,59 @@
+// ============================================================================
+// Veyra analysis agent — Prisma schema (Prisma 7)
+//
+// Deliberately NOT a copy of the main app's full schema. This service only
+// ever reads Meeting (to resolve a LiveKit room name back to a database id)
+// and writes ParticipantAnalysis — Prisma only needs the models you actually
+// query/mutate represented here, not the whole database. Two full schema
+// copies drifting out of sync was a real, repeated pain point earlier in
+// this project's history (the old socket-server's own copy); keeping this
+// one intentionally minimal is what avoids repeating that.
+//
+// IMPORTANT: if the main app's `Meeting` or `ParticipantAnalysis` models
+// change (new required field, renamed column, etc.), this file needs the
+// same change made here — Prisma has no way to know these two schemas
+// describe the same physical tables otherwise.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Minimal reference to the main schema's Meeting model — just enough to
+/// resolve a LiveKit room name (== token) to its database id, which
+/// ParticipantAnalysis rows need as a foreign key. This service never
+/// creates or updates a Meeting row, only reads one.
+model Meeting {
+  id     Int    @id
+  token  String @unique
+  hostId Int
+
+  participantAnalyses ParticipantAnalysis[]
+}
+
+/// Mirrors the main app's model of the same name exactly — see that
+/// schema's copy (veyra/prisma/schema.prisma) for the full field-level
+/// documentation; this is the same table, described minimally here.
+model ParticipantAnalysis {
+  id                         Int      @id @default(autoincrement())
+  meeting                    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId                  Int
+  userId                     Int
+  name                       String
+  communication              Int
+  fluency                    Int
+  topicKnowledge             Int
+  teamworkListening          Int
+  leadershipInitiative       Int
+  confidenceProfessionalism  Int
+  summary                    String?
+  createdAt                  DateTime @default(now())
+
+  @@unique([meetingId, userId])
+  @@index([meetingId])
+}
