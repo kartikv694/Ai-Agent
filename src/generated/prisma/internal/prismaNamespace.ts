@@ -608,7 +608,8 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const MeetingScalarFieldEnum = {
   id: 'id',
   token: 'token',
-  hostId: 'hostId'
+  hostId: 'hostId',
+  meetingSummary: 'meetingSummary'
 } as const
 
 export type MeetingScalarFieldEnum = (typeof MeetingScalarFieldEnum)[keyof typeof MeetingScalarFieldEnum]

@@ -35,6 +35,37 @@ export interface ParticipantScores {
   summary: string | null;
 }
 
+/** Summarizes only the supplied participant transcripts; callers must omit the host. */
+export async function summarizeParticipants(participants: ParticipantTranscript[]): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY is not configured.");
+  const model = process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL;
+  const transcript = participants.map((p) => `${p.name}: ${p.text}`).join("\n");
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "system",
+          content: "Write a concise, factual meeting summary in 2-4 sentences, describing the topics participants discussed and any conclusions or next steps they mentioned. Use only the supplied participant speech. Do not infer or invent details. Return only the summary text.",
+        },
+        { role: "user", content: transcript },
+      ],
+      temperature: 0.2,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Groq summary request failed (${res.status}): ${body.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const summary = data.choices?.[0]?.message?.content?.trim();
+  if (!summary) throw new Error("Groq response had no meeting summary.");
+  return summary.slice(0, 2000);
+}
+
 const SYSTEM_PROMPT = `You are analyzing a transcript of a multi-participant video meeting to help the meeting host understand how each participant performed. You will be given the transcript, labeled by speaker, and must score EVERY listed participant on exactly these 6 parameters, each an integer from 0 to 5 (0 = very poor, 5 = excellent):
 
 - communication: How clearly and effectively they got their points across.

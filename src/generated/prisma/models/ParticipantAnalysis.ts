@@ -610,10 +610,6 @@ export type ParticipantAnalysisUncheckedUpdateManyWithoutMeetingNestedInput = {
   deleteMany?: Prisma.ParticipantAnalysisScalarWhereInput | Prisma.ParticipantAnalysisScalarWhereInput[]
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }

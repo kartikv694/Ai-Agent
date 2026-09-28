@@ -72,7 +72,7 @@ import {
   type RemoteTrack,
   type RemoteTrackPublication,
 } from "@livekit/rtc-node";
-import { analyzeMeeting, type ParticipantTranscript } from "./analysis.js";
+import { analyzeMeeting, summarizeParticipants, type ParticipantTranscript } from "./analysis.js";
 import { prisma } from "./db.js";
 
 // Pure safety net, not the primary end-of-meeting signal (see the
@@ -308,6 +308,17 @@ async function runAnalysisAndSave(roomName: string, participants: Map<string, Tr
   // to judge everyone else's responses. It's only excluded HERE, at the
   // save step: this is analysis of the meeting's other participants, not
   // of the person running it.
+  const participantTranscripts = transcripts.filter((t) => t.userId !== meeting.hostId);
+  if (participantTranscripts.length > 0) {
+    try {
+      const meetingSummary = await summarizeParticipants(participantTranscripts);
+      await prisma.meeting.update({ where: { id: meeting.id }, data: { meetingSummary } });
+      console.log(`[analysis-agent] ${roomName}: saved participant-only meeting summary`);
+    } catch (err) {
+      console.error(`[analysis-agent] ${roomName}: meeting summary failed:`, err);
+    }
+  }
+
   const scores = await analyzeMeeting(transcripts);
   console.log(`[analysis-agent] ${roomName}: Groq call returned, ${scores.size} scored entr(ies) — writing to DB`);
   let savedCount = 0;

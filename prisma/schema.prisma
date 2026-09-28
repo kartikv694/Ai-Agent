@@ -32,6 +32,7 @@ model Meeting {
   id     Int    @id
   token  String @unique
   hostId Int
+  meetingSummary String?
 
   participantAnalyses ParticipantAnalysis[]
 }
