@@ -15,5 +15,9 @@
 import { PrismaClient } from "./generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+  // Give Neon time to wake an idle compute before the worker connects.
+  connectionTimeoutMillis: 15_000,
+});
 export const prisma = new PrismaClient({ adapter });
